@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"orydra/config"
 	"orydra/models"
 	"orydra/pkg/dao"
 	"reflect"
@@ -16,9 +17,11 @@ import (
 )
 
 func HandleGetClients(w http.ResponseWriter, r *http.Request) {
+	envVars := config.SetEnv()
+
 	var clients []models.Client
 	// Get clients from database
-	err := dao.PgDb.Select("id", "client_name").Table(dao.DbTable).Find(&clients).Error
+	err := dao.PgDb.Select("id", "client_name").Table(envVars.POSTGRES_CLIENT_TABLE).Find(&clients).Error
 	if err != nil {
 		http.Error(w, "Error fetching clients", http.StatusInternalServerError)
 		return
@@ -36,6 +39,8 @@ func HandleGetClients(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleGetClientByID(w http.ResponseWriter, r *http.Request) {
+	envVars := config.SetEnv()
+
 	// Get client ID from URL
 	clientID := chi.URLParam(r, "id")
 	if clientID == "" {
@@ -45,7 +50,7 @@ func HandleGetClientByID(w http.ResponseWriter, r *http.Request) {
 
 	// Get client from database
 	var client models.Client
-	err := dao.PgDb.Table(dao.DbTable).Where("id = ?", clientID).First(&client).Error
+	err := dao.PgDb.Table(envVars.POSTGRES_CLIENT_TABLE).Where("id = ?", clientID).First(&client).Error
 	if err != nil {
 		http.Error(w, "Client non trouvé", http.StatusNotFound)
 		return

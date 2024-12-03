@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"orydra/config"
 	"orydra/handlers"
 	"orydra/pkg/logger"
 	"path/filepath"
@@ -39,6 +40,7 @@ func Router() *chi.Mux {
 }
 
 func StartServer(r *chi.Mux) {
-	fmt.Println("Server started on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	envVars := config.SetEnv()
+	fmt.Printf("Server started on 0.0.0.0:%d\n", envVars.PORT)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", envVars.PORT), r))
 }
