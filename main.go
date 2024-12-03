@@ -7,95 +7,23 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"orydra/models"
+	"orydra/pkg/dao"
 	"reflect"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-type Client struct {
-	ID                                         string
-	ClientName                                 string
-	ClientSecret                               string
-	Scope                                      string
-	Owner                                      string
-	PolicyURI                                  string
-	TosURI                                     string
-	ClientURI                                  string
-	LogoURI                                    string
-	ClientSecretExpiresAt                      int32
-	SectorIdentifierURI                        string
-	Jwks                                       string
-	JwksURI                                    string
-	TokenEndpointAuthMethod                    string
-	RequestObjectSigningAlg                    string
-	UserinfoSignedResponseAlg                  string
-	SubjectType                                string
-	PkDeprecated                               int32
-	CreatedAt                                  time.Time
-	UpdatedAt                                  time.Time
-	FrontchannelLogoutURI                      string
-	FrontchannelLogoutSessionRequired          bool
-	BackchannelLogoutURI                       string
-	BackchannelLogoutSessionRequired           bool
-	Metadata                                   string
-	TokenEndpointAuthSigningAlg                string
-	AuthorizationCodeGrantAccessTokenLifespan  sql.NullInt64
-	AuthorizationCodeGrantIDTokenLifespan      sql.NullInt64
-	AuthorizationCodeGrantRefreshTokenLifespan sql.NullInt64
-	ClientCredentialsGrantAccessTokenLifespan  sql.NullInt64
-	ImplicitGrantAccessTokenLifespan           sql.NullInt64
-	ImplicitGrantIDTokenLifespan               sql.NullInt64
-	JwtBearerGrantAccessTokenLifespan          sql.NullInt64
-	PasswordGrantAccessTokenLifespan           sql.NullInt64
-	PasswordGrantRefreshTokenLifespan          sql.NullInt64
-	RefreshTokenGrantIDTokenLifespan           sql.NullInt64
-	RefreshTokenGrantAccessTokenLifespan       sql.NullInt64
-	RefreshTokenGrantRefreshTokenLifespan      sql.NullInt64
-	PK                                         uuid.UUID
-	RegistrationAccessTokenSignature           string
-	NID                                        uuid.UUID
-	RedirectURIs                               []byte
-	GrantTypes                                 []byte
-	ResponseTypes                              []byte
-	Audience                                   []byte
-	AllowedCORSOrigins                         []byte
-	Contacts                                   []byte
-	RequestURIs                                []byte
-	PostLogoutRedirectURIs                     []byte
-	AccessTokenStrategy                        string
-	SkipConsent                                bool
-	SkipLogoutConsent                          *bool
-}
-
 var (
-	db        *gorm.DB
 	templates *template.Template
 )
 
-const (
-	dbHost  string = "localhost"
-	dbPort  int    = 5432
-	dbName  string = "hydra_dev"
-	dbTable string = "hydra_client"
-)
-
 func init() {
-	var err error
-	// Configure postgres connection
-	dsn := fmt.Sprintf("host=%s port=%d user=root password=root dbname=%s sslmode=disable", dbHost, dbPort, dbName)
-
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("Erreur de connexion à la base de données : %v", err)
-	}
-
 	// Templates loading
 	templates = template.Must(template.ParseFiles("templates/index.html"))
 }
@@ -124,11 +52,11 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGetClients(w http.ResponseWriter, r *http.Request) {
-	var clients []Client
+	var clients []models.Client
 	// Get clients from database
-	err := db.Select("id", "client_name").Table(dbTable).Find(&clients).Error
+	err := dao.PgDb.Select("id", "client_name").Table(dao.DbTable).Find(&clients).Error
 	if err != nil {
-		http.Error(w, "Erreur lors de la récupération des clients", http.StatusInternalServerError)
+		http.Error(w, "Error fetching clients", http.StatusInternalServerError)
 		return
 	}
 
@@ -152,8 +80,8 @@ func handleGetClientByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get client from database
-	var client Client
-	err := db.Table(dbTable).Where("id = ?", clientID).First(&client).Error
+	var client models.Client
+	err := dao.PgDb.Table(dao.DbTable).Where("id = ?", clientID).First(&client).Error
 	if err != nil {
 		http.Error(w, "Client non trouvé", http.StatusNotFound)
 		return
@@ -272,7 +200,7 @@ func handleGetClientByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleUpdateClient(w http.ResponseWriter, r *http.Request) {
-	var client Client
+	var client models.Client
 	if err := json.NewDecoder(r.Body).Decode(&client); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return

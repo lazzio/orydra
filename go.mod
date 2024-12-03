@@ -1,4 +1,4 @@
-module ory-admin
+module orydra
 
 go 1.22.2
 
