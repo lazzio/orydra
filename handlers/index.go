@@ -11,11 +11,17 @@ var (
 	Templates *template.Template
 )
 
-func init() {
-	// Templates loading
-	Templates = template.Must(template.ParseFiles("templates/index.html"))
-}
+// func init() {
+// 	// Templates loading
+// 	Templates = template.Must(template.ParseFiles("templates/index.html"))
+// }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	templates.RenderTemplate(w, "index", nil)
+	data := struct {
+		Title string
+	}{
+		Title: "Manage Ory Hydra Client details",
+	}
+
+	templates.RenderTemplate(w, "index", data)
 }
