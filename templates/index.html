@@ -1,18 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Manager</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
-    <script src="https://unpkg.com/htmx.org"></script>
-</head>
-
-<body>
+{{define "content"}}
     <section class="section">
         <div class="container">
-            <h1 class="title">Manage Ory Hydra Clients</h1>
+            <h1 class="title">Manage Ory Hydra Client details</h1>
             <div class="box">
 
                 <!-- Dropdown list of clients -->
@@ -39,23 +28,4 @@
             </div>
         </div>
     </section>
-
-    <script>
-        function updateHxGet(selectElement) {
-            const selectedValue = selectElement.value;
-            if (selectedValue) {
-                selectElement.setAttribute('hx-get', `/api/client/${selectedValue}`);
-                console.log(selectedValue);
-                htmx.ajax('GET', `/api/client/${selectedValue}`, {
-                    target: '#client-details',
-                    swap: 'innerHTML'
-                });
-                document.getElementById('client-details').style.display = 'block';
-            } else {
-                selectElement.removeAttribute('hx-get');
-            }
-        }
-    </script>
-</body>
-
-</html>
+{{end}}

@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 	"text/template"
+
+	"orydra/core/templates"
 )
 
 var (
@@ -15,7 +17,5 @@ func init() {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	if err := Templates.ExecuteTemplate(w, "index.html", nil); err != nil {
-		http.Error(w, "Error rendering the page", http.StatusInternalServerError)
-	}
+	templates.RenderTemplate(w, "index", nil)
 }
