@@ -22,18 +22,24 @@ func Router() *chi.Mux {
 		middleware.SetHeader("Cache-control", "no-store"),
 		middleware.SetHeader("X-Robots-Tag", "noindex, nofollow, nosnippet, noarchive"),
 	)
+
 	// Assets
 	staticPath, _ := filepath.Abs("static")
 	fs := http.FileServer(http.Dir(staticPath))
 	r.Route("/static", func(r chi.Router) {
 		r.Handle("/*", http.StripPrefix("/static/", fs))
 	})
+
 	// Home route
 	r.Route("/", func(r chi.Router) {
-		r.Get("/", handlers.HandleIndex)
-		r.Get("/api/clients", handlers.HandleGetClients)
-		r.Get("/api/client/{id}", handlers.HandleGetClientByID)
-		r.Post("/api/client/update", handlers.HandleUpdateClient)
+		r.Get("/", handlers.Index)
+	})
+
+	// API routes
+	r.Route("/api", func(r chi.Router) {
+		r.Get("/clients", handlers.GetClients)
+		r.Get("/client/{id}", handlers.GetClientByID)
+		r.Post("/client/{id}/update", handlers.UpdateClient)
 	})
 
 	return r

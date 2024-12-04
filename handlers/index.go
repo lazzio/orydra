@@ -14,7 +14,7 @@ func init() {
 	Templates = template.Must(template.ParseFiles("templates/index.html"))
 }
 
-func HandleIndex(w http.ResponseWriter, r *http.Request) {
+func Index(w http.ResponseWriter, r *http.Request) {
 	if err := Templates.ExecuteTemplate(w, "index.html", nil); err != nil {
 		http.Error(w, "Error rendering the page", http.StatusInternalServerError)
 	}
