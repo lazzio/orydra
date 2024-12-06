@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"orydra/config"
 	"orydra/models"
 	"orydra/pkg/dao"
+	"orydra/pkg/hydra"
 	"orydra/pkg/logger"
 	"reflect"
 	"strconv"
@@ -18,12 +20,10 @@ import (
 	"github.com/google/uuid"
 )
 
+// GetClients returns a list of clients as a JSON response
 func GetClients(w http.ResponseWriter, r *http.Request) {
-	envVars := config.SetEnv()
-
-	var clients []models.Client
-	// Get clients from database
-	err := dao.PgDb.Select("id", "client_name").Table(envVars.POSTGRES_CLIENT_TABLE).Find(&clients).Error
+	// Get clients from Hydra
+	clients, err := hydra.GetAllHydraClients(context.Background())
 	if err != nil {
 		http.Error(w, "Error fetching clients", http.StatusInternalServerError)
 		return
@@ -33,7 +33,7 @@ func GetClients(w http.ResponseWriter, r *http.Request) {
 	var options string = `<option value="">Select a client</option>`
 
 	for _, client := range clients {
-		options += fmt.Sprintf(`<option value="%s">%s</option>`, client.ID, client.ClientName)
+		options += fmt.Sprintf(`<option value="%s">%s</option>`, *client.ClientId, *client.ClientName)
 	}
 
 	w.Header().Set("Content-Type", "text/html")
@@ -41,158 +41,206 @@ func GetClients(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetClientByID(w http.ResponseWriter, r *http.Request) {
-	envVars := config.SetEnv()
-
-	// Get client ID from URL
 	clientID := chi.URLParam(r, "id")
 	if clientID == "" {
 		http.Error(w, "Client ID manquant", http.StatusBadRequest)
 		return
 	}
 
-	// Get client from database
-	var client models.Client
-	err := dao.PgDb.Table(envVars.POSTGRES_CLIENT_TABLE).Where("id = ?", clientID).First(&client).Error
+	client, err := hydra.GetHydraClientByID(context.Background(), clientID)
 	if err != nil {
 		http.Error(w, "Client non trouvé", http.StatusNotFound)
 		return
 	}
 
-	// Generate HTML details of the client
 	formHTML := fmt.Sprintf(`
-		<h2 class="subtitle">Détails du client</h2>
+		<h2 class="subtitle">Client details</h2>
 		<form id="clientForm" hx-post="/api/client/%s/update" hx-trigger="submit">
 			<input type="hidden" name="clientId" value="%s">
-	`, clientID, clientID)
+	`, *client.ClientId, *client.ClientId)
 
-	// For each client field, add an input in the formHTML
-	clientType := reflect.TypeOf(client)
-	clientValue := reflect.ValueOf(client)
-
-	for i := 0; i < clientType.NumField(); i++ {
-		field := clientType.Field(i)
-		value := clientValue.Field(i)
-
-		// Handle string fields
-		if field.Type.Kind() == reflect.String {
-			formHTML += fmt.Sprintf(`
-				<div class="field">
-					<label class="checkbox"><strong>%s</strong> (%s)</label>
-					<div class="control">
-						<input id="%s" name="%s" class="input" type="text" value="%s">
-					</div>
-				</div>
-			`, field.Name, field.Type.String(), field.Name, field.Name, value.String())
-		}
-
-		// Handle string slices
-		if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.String {
-			slice := value.Interface().([]string)
-			formHTML += fmt.Sprintf(`
-				<div class="field">
-					<label class="checkbox"><strong>%s</strong> (%s)</label>
-					<div class="control">
-						<input id="%s" name="%s" class="input" type="text" value="%s">
-					</div>
-				</div>
-			`, field.Name, field.Type.String(), field.Name, field.Name, strings.Join(slice, ","))
-		}
-
-		// Handle time.Time fields
-		if field.Type == reflect.TypeOf(time.Time{}) {
-			timeValue := value.Interface().(time.Time)
-			formHTML += fmt.Sprintf(`
-				<div class="field">
-					<label class="checkbox"><strong>%s</strong> (%s)</label>
-					<div class="control">
-						<input id="%s" name="%s" class="input" type="text" value="%s">
-					</div>
-				</div>
-			`, field.Name, field.Type.String(), field.Name, field.Name, timeValue.Format(time.RFC3339))
-		}
-
-		// Handle uuid.UUID fields
-		if field.Type == reflect.TypeOf(uuid.UUID{}) {
-			uuidValue := value.Interface().(uuid.UUID)
-			formHTML += fmt.Sprintf(`
-				<div class="field">
-					<label class="checkbox"><strong>%s</strong> (%s)</label>
-					<div class="control">
-						<input id="%s" name="%s" class="input" type="text" value="%s">
-					</div>
-				</div>
-			`, field.Name, field.Type.String(), field.Name, field.Name, uuidValue.String())
-		}
-
-		// Handle sql.NullInt64 fields
-		if field.Type == reflect.TypeOf(sql.NullInt64{}) {
-			nullIntValue := value.Interface().(sql.NullInt64)
-			formHTML += fmt.Sprintf(`
-				<div class="field">
-					<label class="checkbox"><strong>%s</strong> (%s)</label>
-					<div class="control">
-						<input id="%s" name="%s" class="input" type="text" value="%d">
-					</div>
-				</div>
-			`, field.Name, field.Type.String(), field.Name, field.Name, nullIntValue.Int64)
-		}
-
-		// Handle []byte fields
-		if field.Type == reflect.TypeOf([]byte{}) {
-			var data []string
-			json.Unmarshal(value.Bytes(), &data)
-			formHTML += fmt.Sprintf(`
-				<div class="field">
-					<label class="checkbox"><strong>%s</strong> (%s)</label>
-					<div class="control">
-						<input id="%s" name="%s" class="input" type="text" value="%s">
-					</div>
-				</div>
-			`, field.Name, field.Type.String(), field.Name, field.Name, strings.Join(data, ","))
-		}
-
-		// Handle bool or *bool fields
-		if field.Type == reflect.TypeOf((*bool)(nil)).Elem() || field.Type.Kind() == reflect.Bool {
-			checked := ""
-			if value.Bool() {
-				checked = "checked"
-			}
-			formHTML += fmt.Sprintf(`
-				<div class="field">
-					<label class="checkbox"><p><strong>%s</strong> (%s)</p>
-						<input id="%s" name="%s" type="checkbox" %s>
-					</label>
-				</div>
-			`, field.Name, field.Type.String(), field.Name, field.Name, checked)
-		}
-
-		// Handle int32 fields
-		if field.Type.Kind() == reflect.Int32 {
-			formHTML += fmt.Sprintf(`
-				<div class="field">
-					<label class="checkbox"><p><strong>%s</strong> (%s)</p></label>
-					<div class="control">
-						<input id="%s" name="%s" class="input" type="text" value="%d">
-					</div>
-				</div>
-				`, field.Name, field.Type.String(), field.Name, field.Name, value.Int())
-		}
+	if client.ClientId != nil {
+		formHTML += createField("ClientId", "string", *client.ClientId)
+	}
+	if client.ClientName != nil {
+		formHTML += createField("ClientName", "string", *client.ClientName)
+	}
+	if client.RedirectUris != nil {
+		formHTML += createField("RedirectUris", "[]string", strings.Join(client.RedirectUris, ","))
+	}
+	if client.GrantTypes != nil {
+		formHTML += createField("GrantTypes", "[]string", strings.Join(client.GrantTypes, ","))
+	}
+	if client.ResponseTypes != nil {
+		formHTML += createField("ResponseTypes", "[]string", strings.Join(client.ResponseTypes, ","))
+	}
+	if client.Scope != nil {
+		formHTML += createField("Scope", "string", *client.Scope)
+	}
+	if client.PolicyUri != nil {
+		formHTML += createField("PolicyUri", "string", *client.PolicyUri)
+	}
+	if client.SkipConsent != nil {
+		formHTML += createField("SkipConsent", "bool", fmt.Sprintf("%t", *client.SkipConsent))
+	}
+	if client.SkipLogoutConsent != nil {
+		formHTML += createField("SkipLogoutConsent", "bool", fmt.Sprintf("%t", *client.SkipLogoutConsent))
+	}
+	if client.AccessTokenStrategy != nil {
+		formHTML += createField("AccessTokenStrategy", "string", *client.AccessTokenStrategy)
+	}
+	if client.AllowedCorsOrigins != nil {
+		formHTML += createField("AllowedCorsOrigins", "[]string", strings.Join(client.AllowedCorsOrigins, ","))
+	}
+	if client.Audience != nil {
+		formHTML += createField("Audience", "[]string", strings.Join(client.Audience, ","))
+	}
+	if client.AuthorizationCodeGrantAccessTokenLifespan != nil {
+		formHTML += createField("AuthorizationCodeGrantAccessTokenLifespan", "string", *client.AuthorizationCodeGrantAccessTokenLifespan)
+	}
+	if client.AuthorizationCodeGrantIdTokenLifespan != nil {
+		formHTML += createField("AuthorizationCodeGrantIdTokenLifespan", "string", *client.AuthorizationCodeGrantIdTokenLifespan)
+	}
+	if client.AuthorizationCodeGrantRefreshTokenLifespan != nil {
+		formHTML += createField("AuthorizationCodeGrantRefreshTokenLifespan", "string", *client.AuthorizationCodeGrantRefreshTokenLifespan)
+	}
+	if client.BackchannelLogoutSessionRequired != nil {
+		formHTML += createField("BackchannelLogoutSessionRequired", "bool", fmt.Sprintf("%t", *client.BackchannelLogoutSessionRequired))
+	}
+	if client.BackchannelLogoutUri != nil {
+		formHTML += createField("BackchannelLogoutUri", "string", *client.BackchannelLogoutUri)
+	}
+	if client.ClientCredentialsGrantAccessTokenLifespan != nil {
+		formHTML += createField("ClientCredentialsGrantAccessTokenLifespan", "string", *client.ClientCredentialsGrantAccessTokenLifespan)
+	}
+	if client.ClientSecretExpiresAt != nil {
+		formHTML += createField("ClientSecretExpiresAt", "int64", fmt.Sprintf("%d", *client.ClientSecretExpiresAt))
+	}
+	if client.ClientUri != nil {
+		formHTML += createField("ClientUri", "string", *client.ClientUri)
+	}
+	if client.Contacts != nil {
+		formHTML += createField("Contacts", "[]string", strings.Join(client.Contacts, ","))
+	}
+	if client.CreatedAt != nil {
+		formHTML += createField("CreatedAt", "time.Time", client.CreatedAt.Format(time.RFC3339))
+	}
+	if client.FrontchannelLogoutSessionRequired != nil {
+		formHTML += createField("FrontchannelLogoutSessionRequired", "bool", fmt.Sprintf("%t", *client.FrontchannelLogoutSessionRequired))
+	}
+	if client.FrontchannelLogoutUri != nil {
+		formHTML += createField("FrontchannelLogoutUri", "string", *client.FrontchannelLogoutUri)
+	}
+	if client.ImplicitGrantAccessTokenLifespan != nil {
+		formHTML += createField("ImplicitGrantAccessTokenLifespan", "string", *client.ImplicitGrantAccessTokenLifespan)
+	}
+	if client.ImplicitGrantIdTokenLifespan != nil {
+		formHTML += createField("ImplicitGrantIdTokenLifespan", "string", *client.ImplicitGrantIdTokenLifespan)
+	}
+	if client.Jwks != nil {
+		formHTML += createField("Jwks", "interface{}", fmt.Sprintf("%v", client.Jwks))
+	}
+	if client.JwksUri != nil {
+		formHTML += createField("JwksUri", "string", *client.JwksUri)
+	}
+	if client.JwtBearerGrantAccessTokenLifespan != nil {
+		formHTML += createField("JwtBearerGrantAccessTokenLifespan", "string", *client.JwtBearerGrantAccessTokenLifespan)
+	}
+	if client.LogoUri != nil {
+		formHTML += createField("LogoUri", "string", *client.LogoUri)
+	}
+	if client.Metadata != nil {
+		metadataJSON, _ := json.MarshalIndent(client.Metadata, "", "  ")
+		formHTML += createField("Metadata", "map[string]interface{}", string(metadataJSON))
+	}
+	if client.Owner != nil {
+		formHTML += createField("Owner", "string", *client.Owner)
+	}
+	if client.PostLogoutRedirectUris != nil {
+		formHTML += createField("PostLogoutRedirectUris", "[]string", strings.Join(client.PostLogoutRedirectUris, ","))
+	}
+	if client.RefreshTokenGrantAccessTokenLifespan != nil {
+		formHTML += createField("RefreshTokenGrantAccessTokenLifespan", "string", *client.RefreshTokenGrantAccessTokenLifespan)
+	}
+	if client.RefreshTokenGrantIdTokenLifespan != nil {
+		formHTML += createField("RefreshTokenGrantIdTokenLifespan", "string", *client.RefreshTokenGrantIdTokenLifespan)
+	}
+	if client.RefreshTokenGrantRefreshTokenLifespan != nil {
+		formHTML += createField("RefreshTokenGrantRefreshTokenLifespan", "string", *client.RefreshTokenGrantRefreshTokenLifespan)
+	}
+	if client.RegistrationAccessToken != nil {
+		formHTML += createField("RegistrationAccessToken", "string", *client.RegistrationAccessToken)
+	}
+	if client.RegistrationClientUri != nil {
+		formHTML += createField("RegistrationClientUri", "string", *client.RegistrationClientUri)
+	}
+	if client.RequestObjectSigningAlg != nil {
+		formHTML += createField("RequestObjectSigningAlg", "string", *client.RequestObjectSigningAlg)
+	}
+	if client.RequestUris != nil {
+		formHTML += createField("RequestUris", "[]string", strings.Join(client.RequestUris, ","))
+	}
+	if client.SectorIdentifierUri != nil {
+		formHTML += createField("SectorIdentifierUri", "string", *client.SectorIdentifierUri)
+	}
+	if client.SubjectType != nil {
+		formHTML += createField("SubjectType", "string", *client.SubjectType)
+	}
+	if client.TokenEndpointAuthMethod != nil {
+		formHTML += createField("TokenEndpointAuthMethod", "string", *client.TokenEndpointAuthMethod)
+	}
+	if client.TokenEndpointAuthSigningAlg != nil {
+		formHTML += createField("TokenEndpointAuthSigningAlg", "string", *client.TokenEndpointAuthSigningAlg)
+	}
+	if client.TosUri != nil {
+		formHTML += createField("TosUri", "string", *client.TosUri)
+	}
+	if client.UpdatedAt != nil {
+		formHTML += createField("UpdatedAt", "time.Time", client.UpdatedAt.Format(time.RFC3339))
+	}
+	if client.AccessTokenStrategy != nil {
+		formHTML += createField("AccessTokenStrategy", "string", *client.AccessTokenStrategy)
 	}
 
-	// Add a submit button to the form that call the UpdateClient function
-	// Add a cancel button to the form that redirect to the index page
-	formHTML += `<div class="field is-grouped">`
-	formHTML += `<p class="control">`
-	formHTML += `<button class="button is-primary is-rounded" type="submit">Update</button>`
-	formHTML += `</p>`
-	formHTML += `<p class="control">`
-	formHTML += `<a class="button is-danger is-rounded" href="/">Cancel</a>`
-	formHTML += `</p>`
-	formHTML += `</div>`
-	formHTML += `</form>`
+	formHTML += `<div class="field is-grouped">
+		<p class="control">
+			<button class="button is-primary is-rounded" type="submit">Update</button>
+		</p>
+		<p class="control">
+			<a class="button is-danger is-rounded" href="/">Cancel</a>
+		</p>
+	</div></form>`
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(formHTML))
+}
+
+func createField(name, typ, value string) string {
+	if typ == "bool" {
+		checked := ""
+
+		if value == "true" {
+			checked = "checked"
+		}
+
+		return fmt.Sprintf(`
+			<div class="field">
+				<label class="checkbox"><strong>%s</strong> (%s)</label>
+				<div class="control">
+					<input id="%s" name="%s" type="checkbox" %s>
+				</div>
+			</div>
+		`, name, typ, name, name, checked)
+	}
+
+	return fmt.Sprintf(`
+		<div class="field">
+			<label><strong>%s</strong> (%s)</label>
+			<div class="control">
+				<input id="%s" name="%s" class="input" type="text" value="%s">
+			</div>
+		</div>
+	`, name, typ, name, name, value)
 }
 
 func UpdateClient(w http.ResponseWriter, r *http.Request) {
