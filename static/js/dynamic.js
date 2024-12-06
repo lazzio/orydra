@@ -26,11 +26,11 @@ function setupClientCreation() {
         const formData = new FormData(form);
         const clientName = formData.get('client_name');
         
-        // Désactiver le bouton pendant la création
+        // Disable the submit button
         const submitButton = form.querySelector('button[type="submit"]');
         submitButton.disabled = true;
         
-        // Créer une source d'événements
+        // Create an event source
         const eventSource = new EventSource(`/api/client/create?client_name=${encodeURIComponent(clientName)}`);
         
         eventSource.onmessage = function(event) {
@@ -47,7 +47,7 @@ function setupClientCreation() {
                     '<div class="notification is-success mt-6">Client created successfully!</div>';
             }
             
-            // Réactiver le bouton
+            // Re-enable the submit button
             submitButton.disabled = false;
             eventSource.close();
         };
@@ -55,7 +55,7 @@ function setupClientCreation() {
         eventSource.onerror = function() {
             document.getElementById("message-container").innerHTML = 
                 '<div class="notification is-danger mt-6">Error creating client</div>';
-            // Réactiver le bouton
+            // Re-enable the submit button
             submitButton.disabled = false;
             eventSource.close();
         };
