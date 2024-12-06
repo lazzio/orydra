@@ -1,0 +1,29 @@
+{{ define "content" }}
+<section class="section">
+    <div class="container">
+        <div class="box">
+            <form id="createClientForm">
+                <div class="field mt-4">
+                    <div class="control">
+                        <input class="input is-rounded" type="text" name="client_name" placeholder="Client Name" required>
+                    </div>
+                </div>
+        
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-rounded is-primary" type="submit">Create Client</button>
+                    </div>
+                </div>
+            </form>
+
+            <div id="message-container"></div>
+            <div id="client-details" class="mt-4" style="display: none;">
+                <div class="notification is-info">
+                    <strong>Client ID:</strong> <span id="client-id"></span><br>
+                    <strong>Client Secret:</strong> <span id="client-secret"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{{ end }}
