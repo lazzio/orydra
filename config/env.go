@@ -17,6 +17,7 @@ type EnvVars struct {
 	POSTGRES_HOST         string
 	POSTGRES_SSLMODE      string
 	POSTGRES_CLIENT_TABLE string
+	HYDRA_ADMIN_URL       string
 }
 
 func SetEnv() *EnvVars {
@@ -46,6 +47,7 @@ func SetEnv() *EnvVars {
 		POSTGRES_HOST:         viper.GetString("POSTGRES_HOST"),
 		POSTGRES_SSLMODE:      viper.GetString("POSTGRES_SSLMODE"),
 		POSTGRES_CLIENT_TABLE: viper.GetString("POSTGRES_CLIENT_TABLE"),
+		HYDRA_ADMIN_URL:       viper.GetString("HYDRA_ADMIN_URL"),
 	}
 
 	return envVars

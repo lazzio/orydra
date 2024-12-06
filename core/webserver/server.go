@@ -33,11 +33,13 @@ func Router() *chi.Mux {
 	// Home route
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", handlers.Index)
+		r.Get("/create-client", handlers.CreateClientForm)
 	})
 
 	// API routes
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/clients", handlers.GetClients)
+		r.Get("/client/create", handlers.CreateClient)
 		r.Get("/client/{id}", handlers.GetClientByID)
 		r.Post("/client/{id}/update", handlers.UpdateClient)
 	})
