@@ -12,6 +12,7 @@ import (
 	"orydra/pkg/hydra"
 	"orydra/pkg/logger"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -21,13 +22,21 @@ import (
 )
 
 // GetClients returns a list of clients as a JSON response
+// @return []models.Client, error
 func GetClients(w http.ResponseWriter, r *http.Request) {
 	// Get clients from Hydra
-	clients, err := hydra.GetAllHydraClients(context.Background())
+	clients, err := hydra.GetAllHydraClients(r.Context())
 	if err != nil {
+		funcName := logger.GetFunctionName()
+		logger.Logger.Error("Erreur lors de la récupération des clients", "error", err, "function", funcName)
 		http.Error(w, "Error fetching clients", http.StatusInternalServerError)
 		return
 	}
+
+	// Sort clients by ClientName
+	sort.Slice(clients, func(i, j int) bool {
+		return *clients[i].ClientName < *clients[j].ClientName
+	})
 
 	// Generate HTML options dynamically
 	var options string = `<option value="">Select a client</option>`
@@ -40,15 +49,19 @@ func GetClients(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(options))
 }
 
+// GetClientByID returns a client by ID
+// @return models.Client, error
 func GetClientByID(w http.ResponseWriter, r *http.Request) {
 	clientID := chi.URLParam(r, "id")
 	if clientID == "" {
+		logger.Logger.Error("Client ID manquant")
 		http.Error(w, "Client ID manquant", http.StatusBadRequest)
 		return
 	}
 
 	client, err := hydra.GetHydraClientByID(context.Background(), clientID)
 	if err != nil {
+		logger.Logger.Error("Client non trouvé", "error", err)
 		http.Error(w, "Client non trouvé", http.StatusNotFound)
 		return
 	}
@@ -138,7 +151,12 @@ func GetClientByID(w http.ResponseWriter, r *http.Request) {
 		formHTML += createField("ImplicitGrantIdTokenLifespan", "string", *client.ImplicitGrantIdTokenLifespan)
 	}
 	if client.Jwks != nil {
-		formHTML += createField("Jwks", "interface{}", fmt.Sprintf("%v", client.Jwks))
+		jwksJSON, err := json.MarshalIndent(client.Jwks, "", "  ")
+		if err != nil {
+			logger.Logger.Error("Erreur lors du marshaling JWKS", "error", err)
+			jwksJSON = []byte("{}")
+		}
+		formHTML += createField("Jwks", "interface{}", string(jwksJSON))
 	}
 	if client.JwksUri != nil {
 		formHTML += createField("JwksUri", "string", *client.JwksUri)
@@ -342,6 +360,11 @@ func UpdateClient(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 				fieldValue.SetBytes(jsonData)
+			}
+
+			// Manage interface{} fields
+			if field.Type == reflect.TypeOf(map[string]interface{}{}) {
+				fieldValue.Set(reflect.ValueOf(formValue))
 			}
 		}
 	}

@@ -2,7 +2,9 @@ package hydra
 
 import (
 	"context"
+	"fmt"
 	"orydra/config"
+	"orydra/pkg/logger"
 
 	hc "github.com/ory/hydra-client-go/v2"
 )
@@ -28,6 +30,8 @@ func CreateNewHydraClient(ctx context.Context, oAuth2Client *hc.OAuth2Client) (*
 	// Create a new OAuth2 client with oAuth2Client as the request body
 	client, _, err := hc.NewAPIClient(hydraConfig).OAuth2API.CreateOAuth2Client(ctx).OAuth2Client(*oAuth2Client).Execute()
 	if err != nil {
+		funcName := logger.GetFunctionName()
+		logger.Logger.Error("Erreur lors de la création du client", "error", err, "function", funcName)
 		return nil, err
 	}
 
@@ -37,6 +41,8 @@ func CreateNewHydraClient(ctx context.Context, oAuth2Client *hc.OAuth2Client) (*
 func GetHydraClient(ctx context.Context, clientID string) (*hc.OAuth2Client, error) {
 	client, _, err := hc.NewAPIClient(hydraConfig).OAuth2API.GetOAuth2Client(ctx, clientID).Execute()
 	if err != nil {
+		funcName := logger.GetFunctionName()
+		logger.Logger.Error("Client non trouvé", "error", err, "function", funcName)
 		return nil, err
 	}
 
@@ -46,6 +52,8 @@ func GetHydraClient(ctx context.Context, clientID string) (*hc.OAuth2Client, err
 func DeleteHydraClient(ctx context.Context, clientID string) error {
 	_, err := hc.NewAPIClient(hydraConfig).OAuth2API.DeleteOAuth2Client(ctx, clientID).Execute()
 	if err != nil {
+		funcName := logger.GetFunctionName()
+		logger.Logger.Error("Erreur lors de la suppression du client", "error", err, "function", funcName)
 		return err
 	}
 
@@ -53,12 +61,17 @@ func DeleteHydraClient(ctx context.Context, clientID string) error {
 }
 
 // Get the list of all clients
+// @param ctx context.Context
+// @return []hc.OAuth2Client, error
 func GetAllHydraClients(ctx context.Context) ([]hc.OAuth2Client, error) {
 	clients, _, err := hc.NewAPIClient(hydraConfig).OAuth2API.ListOAuth2Clients(ctx).Execute()
 	if err != nil {
+		funcName := logger.GetFunctionName()
+		logger.Logger.Error("Erreur lors de la récupération de la liste des clients", "error", err, "function", funcName)
 		return nil, err
 	}
 
+	fmt.Printf("Clients: %+v\n", clients)
 	return clients, nil
 }
 
@@ -66,6 +79,8 @@ func GetAllHydraClients(ctx context.Context) ([]hc.OAuth2Client, error) {
 func GetHydraClientByID(ctx context.Context, clientID string) (*hc.OAuth2Client, error) {
 	client, _, err := hc.NewAPIClient(hydraConfig).OAuth2API.GetOAuth2Client(ctx, clientID).Execute()
 	if err != nil {
+		funcName := logger.GetFunctionName()
+		logger.Logger.Error("Erreur lors de la récupération du client", "error", err, "function", funcName)
 		return nil, err
 	}
 
@@ -76,6 +91,8 @@ func GetHydraClientByID(ctx context.Context, clientID string) (*hc.OAuth2Client,
 func GetHydraClientIDByName(ctx context.Context, clientName string) (string, error) {
 	clients, err := GetAllHydraClients(ctx)
 	if err != nil {
+		funcName := logger.GetFunctionName()
+		logger.Logger.Error("Erreur lors de la récupération de la liste des clients", "error", err, "function", funcName)
 		return "", err
 	}
 
@@ -92,11 +109,15 @@ func GetHydraClientIDByName(ctx context.Context, clientName string) (string, err
 func GetHydraClientByName(ctx context.Context, clientName string) (*hc.OAuth2Client, error) {
 	clientID, err := GetHydraClientIDByName(ctx, clientName)
 	if err != nil {
+		funcName := logger.GetFunctionName()
+		logger.Logger.Error("Erreur lors de la récupération de l'ID du client", "error", err, "function", funcName)
 		return nil, err
 	}
 
 	client, _, err := hc.NewAPIClient(hydraConfig).OAuth2API.GetOAuth2Client(ctx, clientID).Execute()
 	if err != nil {
+		funcName := logger.GetFunctionName()
+		logger.Logger.Error("Erreur lors de la récupération du client", "error", err, "function", funcName)
 		return nil, err
 	}
 
@@ -107,6 +128,8 @@ func GetHydraClientByName(ctx context.Context, clientName string) (*hc.OAuth2Cli
 func GetHydraClientSecretByID(ctx context.Context, clientID string) (string, error) {
 	client, err := GetHydraClientByID(ctx, clientID)
 	if err != nil {
+		funcName := logger.GetFunctionName()
+		logger.Logger.Error("Erreur lors de la récupération du client", "error", err, "function", funcName)
 		return "", err
 	}
 
