@@ -71,8 +71,6 @@ func GetClientByID(w http.ResponseWriter, r *http.Request) {
 		<form id="clientForm" hx-post="/api/client/%s/update" hx-trigger="submit">
 	`, *client.ClientId)
 
-	// Send initial client data to the form to compare with updated values
-	//formHTML += fmt.Sprintf(`<input type="hidden" name="initialClient" value="%v">`, client)
 	formHTML += fmt.Sprintf(`<input type="hidden" name="clientID" value="%s">`, clientID)
 
 	// Generate form fields for each client field

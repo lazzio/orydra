@@ -1,0 +1,30 @@
+{{define "content"}}
+    <section class="section">
+        <div class="container">
+            <div class="box">
+
+                <!-- Dropdown list of clients -->
+                <div class="field">
+                    <label class="label">Existing clients</label>
+                    <div class="control">
+                        <div hx-get="/api/clients" hx-trigger="load" hx-target="#client-select" hx-swap="innerHTML" class="select is-fullwidth is-rounded">
+                            <select id="client-select"
+                            class="select"
+                            hx-trigger="change"
+                            hx-target="#client-details"
+                            hx-swap="innerHTML"
+                            onchange="updateHxGet(this)">
+                                <option value="">Select a client</option>
+                                <!-- Options loaded dynamically by HTMX -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations on selected client -->
+            <div id="client-details" class="box" style="display: none;">
+            </div>
+        </div>
+    </section>
+{{end}}
