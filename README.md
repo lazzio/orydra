@@ -8,6 +8,9 @@ This is a simple web application to manage Ory Hydra clients, written in Go.
 - View clients
 - Add clients
 - Update clients
+
+### Coming next
+
 - Delete clients
 
 ## Usage
