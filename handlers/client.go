@@ -74,53 +74,53 @@ func GetClientByID(w http.ResponseWriter, r *http.Request) {
 	formHTML += fmt.Sprintf(`<input type="hidden" name="clientID" value="%s">`, clientID)
 
 	// Generate form fields for each client field
-	formHTML += createField("AccessTokenStrategy", "string", client.GetAccessTokenStrategy())
-	formHTML += createField("AllowedCorsOrigins", "[]string", client.GetAllowedCorsOrigins())
-	formHTML += createField("Audience", "[]string", client.GetAudience())
-	formHTML += createField("AuthorizationCodeGrantAccessTokenLifespan", "string", client.GetAuthorizationCodeGrantAccessTokenLifespan())
-	formHTML += createField("AuthorizationCodeGrantIdTokenLifespan", "string", client.GetAuthorizationCodeGrantIdTokenLifespan())
-	formHTML += createField("AuthorizationCodeGrantRefreshTokenLifespan", "string", client.GetAuthorizationCodeGrantRefreshTokenLifespan())
-	formHTML += createField("BackchannelLogoutSessionRequired", "bool", client.GetBackchannelLogoutSessionRequired())
-	formHTML += createField("BackchannelLogoutUri", "string", client.GetBackchannelLogoutUri())
-	formHTML += createField("ClientCredentialsGrantAccessTokenLifespan", "string", client.GetClientCredentialsGrantAccessTokenLifespan())
-	formHTML += createField("ClientId", "string", client.GetClientId())
-	formHTML += createField("ClientName", "string", client.GetClientName())
+	formHTML += createField("AccessTokenStrategy", "string", false, client.GetAccessTokenStrategy())
+	formHTML += createField("AllowedCorsOrigins", "[]string", false, client.GetAllowedCorsOrigins())
+	formHTML += createField("Audience", "[]string", false, client.GetAudience())
+	formHTML += createField("AuthorizationCodeGrantAccessTokenLifespan", "string", false, client.GetAuthorizationCodeGrantAccessTokenLifespan())
+	formHTML += createField("AuthorizationCodeGrantIdTokenLifespan", "string", false, client.GetAuthorizationCodeGrantIdTokenLifespan())
+	formHTML += createField("AuthorizationCodeGrantRefreshTokenLifespan", "string", false, client.GetAuthorizationCodeGrantRefreshTokenLifespan())
+	formHTML += createField("BackchannelLogoutSessionRequired", "bool", false, client.GetBackchannelLogoutSessionRequired())
+	formHTML += createField("BackchannelLogoutUri", "string", false, client.GetBackchannelLogoutUri())
+	formHTML += createField("ClientCredentialsGrantAccessTokenLifespan", "string", false, client.GetClientCredentialsGrantAccessTokenLifespan())
+	formHTML += createField("ClientId", "string", true, client.GetClientId())
+	formHTML += createField("ClientName", "string", false, client.GetClientName())
 	// formHTML += createField("ClientSecretExpiresAt", "string", client.GetClientSecretExpiresAt())
-	formHTML += createField("ClientUri", "string", client.GetClientUri())
-	formHTML += createField("Contacts", "[]string", client.GetContacts())
-	formHTML += createField("CreatedAt", "time", client.GetCreatedAt())
-	formHTML += createField("FrontchannelLogoutSessionRequired", "bool", client.GetFrontchannelLogoutSessionRequired())
-	formHTML += createField("FrontchannelLogoutUri", "string", client.GetFrontchannelLogoutUri())
-	formHTML += createField("GrantTypes", "[]string", client.GetGrantTypes())
-	formHTML += createField("ImplicitGrantAccessTokenLifespan", "string", client.GetImplicitGrantAccessTokenLifespan())
-	formHTML += createField("ImplicitGrantIdTokenLifespan", "string", client.GetImplicitGrantIdTokenLifespan())
-	formHTML += createField("Jwks", "interface{}", client.GetJwks())
-	formHTML += createField("JwksUri", "string", client.GetJwksUri())
-	formHTML += createField("JwtBearerGrantAccessTokenLifespan", "string", client.GetJwtBearerGrantAccessTokenLifespan())
-	formHTML += createField("LogoUri", "string", client.GetLogoUri())
-	formHTML += createField("Metadata", "interface{}", client.GetMetadata())
-	formHTML += createField("Owner", "string", client.GetOwner())
-	formHTML += createField("PolicyUri", "string", client.GetPolicyUri())
-	formHTML += createField("PostLogoutRedirectUris", "[]string", client.GetPostLogoutRedirectUris())
-	formHTML += createField("RedirectUris", "[]string", client.GetRedirectUris())
-	formHTML += createField("RefreshTokenGrantAccessTokenLifespan", "string", client.GetRefreshTokenGrantAccessTokenLifespan())
-	formHTML += createField("RefreshTokenGrantIdTokenLifespan", "string", client.GetRefreshTokenGrantIdTokenLifespan())
-	formHTML += createField("RefreshTokenGrantRefreshTokenLifespan", "string", client.GetRefreshTokenGrantRefreshTokenLifespan())
-	formHTML += createField("RegistrationAccessToken", "string", client.GetRegistrationAccessToken())
-	formHTML += createField("RegistrationClientUri", "string", client.GetRegistrationClientUri())
-	formHTML += createField("RequestObjectSigningAlg", "string", client.GetRequestObjectSigningAlg())
-	formHTML += createField("RequestUris", "string", client.GetRequestUris())
-	formHTML += createField("ResponseTypes", "string", client.GetResponseTypes())
-	formHTML += createField("Scope", "string", client.GetScope())
-	formHTML += createField("SectorIdentifierUri", "string", client.GetSectorIdentifierUri())
-	formHTML += createField("SkipConsent", "bool", client.GetSkipConsent())
-	formHTML += createField("SkipLogoutConsent", "bool", client.GetSkipLogoutConsent())
-	formHTML += createField("SubjectType", "string", client.GetSubjectType())
-	formHTML += createField("TokenEndpointAuthMethod", "string", client.GetTokenEndpointAuthMethod())
-	formHTML += createField("TokenEndpointAuthSigningAlg", "string", client.GetTokenEndpointAuthSigningAlg())
-	formHTML += createField("TosUri", "string", client.GetTosUri())
-	formHTML += createField("UpdatedAt", "time", client.GetUpdatedAt())
-	formHTML += createField("UserinfoSignedResponseAlg", "string", client.GetUserinfoSignedResponseAlg())
+	formHTML += createField("ClientUri", "string", false, client.GetClientUri())
+	formHTML += createField("Contacts", "[]string", false, client.GetContacts())
+	formHTML += createField("CreatedAt", "time", true, client.GetCreatedAt())
+	formHTML += createField("FrontchannelLogoutSessionRequired", "bool", false, client.GetFrontchannelLogoutSessionRequired())
+	formHTML += createField("FrontchannelLogoutUri", "string", false, client.GetFrontchannelLogoutUri())
+	formHTML += createField("GrantTypes", "[]string", false, client.GetGrantTypes())
+	formHTML += createField("ImplicitGrantAccessTokenLifespan", "string", false, client.GetImplicitGrantAccessTokenLifespan())
+	formHTML += createField("ImplicitGrantIdTokenLifespan", "string", false, client.GetImplicitGrantIdTokenLifespan())
+	formHTML += createField("Jwks", "interface{}", false, client.GetJwks())
+	formHTML += createField("JwksUri", "string", false, client.GetJwksUri())
+	formHTML += createField("JwtBearerGrantAccessTokenLifespan", "string", false, client.GetJwtBearerGrantAccessTokenLifespan())
+	formHTML += createField("LogoUri", "string", false, client.GetLogoUri())
+	formHTML += createField("Metadata", "interface{}", true, client.GetMetadata())
+	formHTML += createField("Owner", "string", false, client.GetOwner())
+	formHTML += createField("PolicyUri", "string", false, client.GetPolicyUri())
+	formHTML += createField("PostLogoutRedirectUris", "[]string", false, client.GetPostLogoutRedirectUris())
+	formHTML += createField("RedirectUris", "[]string", false, client.GetRedirectUris())
+	formHTML += createField("RefreshTokenGrantAccessTokenLifespan", "string", false, client.GetRefreshTokenGrantAccessTokenLifespan())
+	formHTML += createField("RefreshTokenGrantIdTokenLifespan", "string", false, client.GetRefreshTokenGrantIdTokenLifespan())
+	formHTML += createField("RefreshTokenGrantRefreshTokenLifespan", "string", false, client.GetRefreshTokenGrantRefreshTokenLifespan())
+	formHTML += createField("RegistrationAccessToken", "string", false, client.GetRegistrationAccessToken())
+	formHTML += createField("RegistrationClientUri", "string", false, client.GetRegistrationClientUri())
+	formHTML += createField("RequestObjectSigningAlg", "string", false, client.GetRequestObjectSigningAlg())
+	formHTML += createField("RequestUris", "string", false, client.GetRequestUris())
+	formHTML += createField("ResponseTypes", "string", false, client.GetResponseTypes())
+	formHTML += createField("Scope", "string", false, client.GetScope())
+	formHTML += createField("SectorIdentifierUri", "string", false, client.GetSectorIdentifierUri())
+	formHTML += createField("SkipConsent", "bool", false, client.GetSkipConsent())
+	formHTML += createField("SkipLogoutConsent", "bool", false, client.GetSkipLogoutConsent())
+	formHTML += createField("SubjectType", "string", false, client.GetSubjectType())
+	formHTML += createField("TokenEndpointAuthMethod", "string", false, client.GetTokenEndpointAuthMethod())
+	formHTML += createField("TokenEndpointAuthSigningAlg", "string", false, client.GetTokenEndpointAuthSigningAlg())
+	formHTML += createField("TosUri", "string", false, client.GetTosUri())
+	formHTML += createField("UpdatedAt", "time", true, client.GetUpdatedAt())
+	formHTML += createField("UserinfoSignedResponseAlg", "string", false, client.GetUserinfoSignedResponseAlg())
 
 	formHTML += `<div class="field is-grouped">
 		<p class="control">
@@ -144,7 +144,13 @@ func GetClientByID(w http.ResponseWriter, r *http.Request) {
 //   - value: the current value of the field (used for checked state in checkbox or value in text input)
 //
 // Returns a string containing the HTML markup for the form field with Bulma CSS classes.
-func createField(name, typ, value any) string {
+func createField(name string, typ string, isDisabled bool, value any) string {
+	var disabled = ""
+
+	if isDisabled {
+		disabled = "disabled"
+	}
+
 	switch typ {
 	case "bool":
 		checked := ""
@@ -157,10 +163,10 @@ func createField(name, typ, value any) string {
 			<div class="field">
 				<label class="checkbox"><strong>%s</strong> (%s)</label>
 				<div class="control">
-					<input id="%s" name="%s" type="checkbox" %s>
+					<input id="%s" name="%s" type="checkbox" %s %s>
 				</div>
 			</div>
-		`, name, typ, name, name, checked)
+		`, name, typ, name, name, disabled, checked)
 
 	case "[]string":
 		// Convert []string to comma-separated string
@@ -172,19 +178,19 @@ func createField(name, typ, value any) string {
 			<div class="field">
 				<label><strong>%s</strong> (%s converted to comma-separated values)</label>
 				<div class="control">
-					<input id="%s" name="%s" class="input" type="text" value="%s">
+					<input id="%s" name="%s" class="input" type="text" value="%s" %s>
 				</div>
 			</div>
-		`, name, typ, name, name, valueStr)
+		`, name, typ, name, name, valueStr, disabled)
 
 	default:
 		return fmt.Sprintf(`
 				<div class="field">
 					<label><strong>%s</strong> (%s)</label>
 					<div class="control">
-						<input id="%s" name="%s" class="input" type="text" value="%s">
+						<input id="%s" name="%s" class="input" type="text" value="%s" %s>
 					</div>
 				</div>
-			`, name, typ, name, name, value)
+			`, name, typ, name, name, value, disabled)
 	}
 }

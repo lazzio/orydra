@@ -9,15 +9,8 @@ import (
 )
 
 type EnvVars struct {
-	PORT                  int
-	POSTGRES_PORT         int
-	POSTGRES_USER         string
-	POSTGRES_PASSWORD     string
-	POSTGRES_DB           string
-	POSTGRES_HOST         string
-	POSTGRES_SSLMODE      string
-	POSTGRES_CLIENT_TABLE string
-	HYDRA_ADMIN_URL       string
+	PORT            int
+	HYDRA_ADMIN_URL string
 }
 
 func SetEnv() *EnvVars {
@@ -30,7 +23,7 @@ func SetEnv() *EnvVars {
 		logger.Logger.Warn("No .env file found", "error", err)
 	}
 
-	requiredVars := []string{"PORT", "POSTGRES_PORT", "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_HOST", "POSTGRES_SSLMODE", "POSTGRES_CLIENT_TABLE"}
+	requiredVars := []string{"PORT", "HYDRA_ADMIN_URL"}
 
 	for _, v := range requiredVars {
 		if !viper.IsSet(v) {
@@ -39,15 +32,8 @@ func SetEnv() *EnvVars {
 	}
 
 	envVars := &EnvVars{
-		PORT:                  viper.GetInt("PORT"),
-		POSTGRES_PORT:         viper.GetInt("POSTGRES_PORT"),
-		POSTGRES_USER:         viper.GetString("POSTGRES_USER"),
-		POSTGRES_PASSWORD:     viper.GetString("POSTGRES_PASSWORD"),
-		POSTGRES_DB:           viper.GetString("POSTGRES_DB"),
-		POSTGRES_HOST:         viper.GetString("POSTGRES_HOST"),
-		POSTGRES_SSLMODE:      viper.GetString("POSTGRES_SSLMODE"),
-		POSTGRES_CLIENT_TABLE: viper.GetString("POSTGRES_CLIENT_TABLE"),
-		HYDRA_ADMIN_URL:       viper.GetString("HYDRA_ADMIN_URL"),
+		PORT:            viper.GetInt("PORT"),
+		HYDRA_ADMIN_URL: viper.GetString("HYDRA_ADMIN_URL"),
 	}
 
 	return envVars
