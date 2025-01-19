@@ -189,6 +189,7 @@ func UpdateOAuth2ClientUsingJsonPatch(clientID string, form url.Values) error {
 			"FrontchannelLogoutSessionRequired",
 			"BackchannelLogoutSessionRequired":
 			key := commons.ToSnakeCase(key)
+
 			// Traiter les champs booléens
 			patches = append(patches, hc.JsonPatch{
 				Op:    "replace",
