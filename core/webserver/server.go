@@ -32,7 +32,7 @@ func Router() *chi.Mux {
 
 	// Home route
 	r.Route("/", func(r chi.Router) {
-		r.Get("/", handlers.Index)
+		r.Get("/", handlers.CreateClientForm)
 		r.Get("/create-client", handlers.CreateClientForm)
 		r.Get("/update-client", handlers.UpdateClient)
 	})

@@ -184,6 +184,12 @@ func createField(name string, typ string, isDisabled bool, value any) string {
 		`, name, typ, name, name, valueStr, disabled)
 
 	default:
+		valStr := fmt.Sprintf("%v", value)
+		if strings.HasPrefix(valStr, "[") && strings.HasSuffix(valStr, "]") {
+			valStr = strings.Trim(valStr, "[]")
+			valStr = strings.ReplaceAll(valStr, " ", ",")
+		}
+
 		return fmt.Sprintf(`
 				<div class="field">
 					<label><strong>%s</strong> (%s)</label>
@@ -191,6 +197,6 @@ func createField(name string, typ string, isDisabled bool, value any) string {
 						<input id="%s" name="%s" class="input" type="text" value="%s" %s>
 					</div>
 				</div>
-			`, name, typ, name, name, value, disabled)
+			`, name, typ, name, name, valStr, disabled)
 	}
 }
