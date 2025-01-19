@@ -16,13 +16,7 @@ Environnement variables are stored in the `.env` file. You can use the `.env.def
 
 ```
 PORT=8080
-POSTGRES_PORT=5432
-POSTGRES_USER=root
-POSTGRES_PASSWORD=root
-POSTGRES_DB=hydra_dev
-POSTGRES_HOST=localhost
-POSTGRES_SSLMODE=disable
-POSTGRES_CLIENT_TABLE=hydra_client
+OHYDRA_ADMIN_URL=http://localhost:4445
 ```
 
 ```bash
