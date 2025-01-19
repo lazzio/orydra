@@ -1,0 +1,87 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Git Tag
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  create-tag-and-release:
+    if: github.actor != 'github-actions[bot]'
+    
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout le code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Configuration Git
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # 3. Déterminer la nouvelle version (exemple : incrémentation mineure)
+      - name: Determine version
+        id: version
+        run: |
+          # Récupérer le dernier tag
+          latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+          echo "Latest tag: $latest_tag"
+
+          # S'assurer qu'un tag existe, sinon utiliser une version par défaut
+          if [ -z "$latest_tag" ]; then
+            latest_tag="v0.1.0"
+          fi
+
+          # Extraire les numéros de version
+          IFS='.' read -r -a version_parts <<< "${latest_tag#v}"
+          major=${version_parts[0]}
+          minor=${version_parts[1]}
+          patch=${version_parts[2]}
+
+          # Incrémenter la version mineure (vous pouvez ajuster ici selon vos besoins)
+          minor=$((minor + 1))
+          new_tag="v$major.$minor.0"
+          echo "New tag: $new_tag"
+
+          # Exporter la nouvelle version pour les étapes suivantes
+          echo "new_tag=$new_tag" >> $GITHUB_ENV
+
+      # 4. Créer le tag
+      - name: Create and push new tag
+        run: |
+          git tag ${{ env.new_tag }}
+          git push origin ${{ env.new_tag }}
+
+      # 5. Générer une release
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.new_tag }}
+          release_name: Release ${{ env.new_tag }}
+          body: |
+            **Changelog:**
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 6. Mettre à jour le changelog
+      - name: Update CHANGELOG.md
+        run: |
+          echo "## ${{ env.new_tag }} - $(date +'%Y-%m-%d')" >> CHANGELOG.md
+          echo "- Description des changements pour cette version." >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          cat CHANGELOG.md
+
+      # 7. Commit et push le changelog
+      - name: Commit and push changelog
+        run: |
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG for ${{ env.new_tag }}"
+          git push origin main
