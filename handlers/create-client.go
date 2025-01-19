@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"orydra/core/templates"
 	"orydra/pkg/hydra"
@@ -44,8 +43,7 @@ func CreateClient(w http.ResponseWriter, r *http.Request) {
 		// Récupérer les données du query parameter
 		clientName := r.URL.Query().Get("client_name")
 		if clientName == "" {
-			data, _ := json.Marshal(map[string]string{"error": "client_name is required"})
-			fmt.Fprintf(w, "data: %s\n\n", data)
+			_, _ = json.Marshal(map[string]string{"error": "client_name is required"})
 			flusher.Flush()
 			return
 		}
@@ -77,16 +75,13 @@ func CreateClient(w http.ResponseWriter, r *http.Request) {
 		// Attendre le résultat
 		select {
 		case result := <-resultChan:
-			data, _ := json.Marshal(result)
-			fmt.Fprintf(w, "data: %s\n\n", data)
+			_, _ = json.Marshal(result)
 			flusher.Flush()
 		case err := <-errChan:
-			data, _ := json.Marshal(map[string]string{"error": err.Error()})
-			fmt.Fprintf(w, "data: %s\n\n", data)
+			_, _ = json.Marshal(map[string]string{"error": err.Error()})
 			flusher.Flush()
 		case <-time.After(10 * time.Second):
-			data, _ := json.Marshal(map[string]string{"error": "timeout"})
-			fmt.Fprintf(w, "data: %s\n\n", data)
+			_, _ = json.Marshal(map[string]string{"error": "timeout"})
 			flusher.Flush()
 		}
 		return
