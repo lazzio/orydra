@@ -43,17 +43,6 @@ func CreateNewHydraClient(ctx context.Context, oAuth2Client *hc.OAuth2Client) (*
 	return client, nil
 }
 
-func GetHydraClient(ctx context.Context, clientID string) (*hc.OAuth2Client, error) {
-	client, _, err := hc.NewAPIClient(HydraConfig).OAuth2API.GetOAuth2Client(ctx, clientID).Execute()
-	if err != nil {
-		funcName := logger.GetFunctionName()
-		logger.Logger.Error("Client non trouvé", "error", err, "function", funcName)
-		return nil, err
-	}
-
-	return client, nil
-}
-
 func DeleteHydraClient(ctx context.Context, clientID string) error {
 	_, err := hc.NewAPIClient(HydraConfig).OAuth2API.DeleteOAuth2Client(ctx, clientID).Execute()
 	if err != nil {
@@ -107,39 +96,6 @@ func GetHydraClientIDByName(ctx context.Context, clientName string) (string, err
 	}
 
 	return "", nil
-}
-
-// Get specific client details by client name
-func GetHydraClientByName(ctx context.Context, clientName string) (*hc.OAuth2Client, error) {
-	clientID, err := GetHydraClientIDByName(ctx, clientName)
-	if err != nil {
-		funcName := logger.GetFunctionName()
-		logger.Logger.Error("Erreur lors de la récupération de l'ID du client", "error", err, "function", funcName)
-		return nil, err
-	}
-
-	client, _, err := hc.NewAPIClient(HydraConfig).OAuth2API.GetOAuth2Client(ctx, clientID).Execute()
-	if err != nil {
-		funcName := logger.GetFunctionName()
-		logger.Logger.Error("Erreur lors de la récupération du client", "error", err, "function", funcName)
-		return nil, err
-	}
-
-	return client, nil
-}
-
-// Get client secret by client ID
-func GetHydraClientSecretByID(ctx context.Context, clientID string) (string, error) {
-	client, err := GetHydraClientByID(ctx, clientID)
-	if err != nil {
-		funcName := logger.GetFunctionName()
-		logger.Logger.Error("Erreur lors de la récupération du client", "error", err, "function", funcName)
-		return "", err
-	}
-
-	clientSecret := client.GetClientSecret()
-
-	return clientSecret, nil
 }
 
 func UpdateOAuth2ClientUsingJsonPatch(clientID string, form url.Values) error {
